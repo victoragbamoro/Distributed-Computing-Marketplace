@@ -175,3 +175,203 @@
     (map-get? clients client-id)
   )
 )
+
+;; Get job details
+(define-read-only (get-job (job-id uint))
+  (map-get? jobs job-id)
+)
+
+;; Helper function for get-job-bids
+(define-private (check-and-add-bid (result (list 10 {job-id: uint, bidder: principal, amount: uint, estimated-time: uint, proposal: (string-utf8 200), timestamp: uint})) (current-job-id uint))
+  result
+)
+
+;; Get dispute details
+(define-read-only (get-dispute (dispute-id uint))
+  (map-get? disputes dispute-id)
+)
+
+;; Get reputation rating for a job
+(define-read-only (get-reputation-for-job (user principal) (job-id uint))
+  (map-get? reputation-history {user: user, job-id: job-id})
+)
+
+;; Get governance proposal details
+(define-read-only (get-proposal (proposal-id uint))
+  (map-get? governance-proposals proposal-id)
+)
+
+;; Get vote on a proposal
+(define-read-only (get-vote (proposal-id uint) (voter principal))
+  (map-get? proposal-votes {proposal-id: proposal-id, voter: voter})
+)
+
+;; Get payment channel details
+(define-read-only (get-payment-channel (provider principal) (client principal))
+  (map-get? payment-channels {provider: provider, client: client})
+)
+
+;; Check if a user is registered as a client
+(define-read-only (is-client-registered (client principal))
+  (get registered (get-client client))
+)
+
+;; Register as a client
+(define-public (register-client (lightning-node-id (optional (string-utf8 66))))
+  (let
+    ((client-exists (is-client-registered tx-sender)))
+    
+    (asserts! (not client-exists) ERR-ALREADY-REGISTERED)
+    
+    ;; Map the client data
+    (map-set clients tx-sender
+      {
+        registered: true,
+        reputation-score: u80,  ;; Start with neutral reputation (80/100)
+        total-ratings: u0,
+        total-jobs-created: u0,
+        total-jobs-completed: u0,
+        total-spent: u0,
+        lightning-node-id: lightning-node-id
+      }
+    )
+    
+    (ok true)
+  )
+)
+
+;; Update client details
+(define-public (update-client-details (lightning-node-id (optional (string-utf8 66))))
+  (let
+    ((client-data (get-client tx-sender)))
+    
+    (asserts! (get registered client-data) ERR-NOT-REGISTERED)
+    
+    (map-set clients tx-sender
+      (merge client-data 
+        {
+          lightning-node-id: lightning-node-id
+        }
+      )
+    )
+    
+    (ok true)
+  )
+)
+
+;; Rate a client after job completion
+(define-public (rate-client (job-id uint) (rating uint) (comment (string-utf8 200)))
+  (let
+    ((job-data (unwrap! (get-job job-id) ERR-INVALID-JOB))
+     (client (get client job-data))
+     (client-data (get-client client)))
+    
+    ;; Ensure sender is the job provider
+    (asserts! (is-eq (some tx-sender) (get provider job-data)) ERR-NOT-AUTHORIZED)
+    
+    
+    
+    ;; Ensure rating is valid (1-5)
+    (asserts! (and (>= rating u1) (<= rating u5)) ERR-INVALID-RATING)
+    
+    ;; Record the rating
+    (map-set reputation-history
+      {user: client, job-id: job-id}
+      {
+        rater: tx-sender,
+        rating: rating,
+        comment: comment,
+        timestamp: stacks-block-height
+      }
+    )
+    
+    ;; Update client reputation
+    (let
+      ((current-total (* (get reputation-score client-data) (get total-ratings client-data)))
+       (new-total-ratings (+ (get total-ratings client-data) u1))
+       (new-total-score (+ current-total (* rating u20)))  ;; Scale 1-5 to 0-100
+       (new-reputation (/ new-total-score new-total-ratings)))
+      
+      (map-set clients client
+        (merge client-data
+          {
+            reputation-score: new-reputation,
+            total-ratings: new-total-ratings
+          }
+        )
+      )
+      
+      (ok true)
+    )
+  )
+)
+
+;; NEW: Verification results
+(define-map verification-results
+  {job-id: uint, verifier: principal}
+  {
+    result: bool,                      ;; true = verified correct, false = incorrect
+    verification-time: uint,
+    reward-amount: uint,
+    verification-proof: (buff 64),
+    comments: (string-utf8 200)
+  }
+)
+
+;; NEW: Provider subscription tiers
+(define-map subscription-tiers uint
+  {
+    name: (string-utf8 50),
+    description: (string-utf8 200),
+    cost-per-month: uint,
+    benefits: (string-utf8 500),
+    max-concurrent-jobs: uint,
+    priority-bidding: bool,
+    reduced-fees: uint                  ;; Fee reduction percentage
+  }
+)
+
+;; NEW: SLA (Service Level Agreement) definitions
+(define-map service-level-agreements uint
+  {
+    name: (string-utf8 50),
+    description: (string-utf8 200),
+    uptime-requirement: uint,           ;; Percentage
+    response-time-max: uint,            ;; In blocks
+    penalty-amount: uint,               ;; In micro-STX
+    bonus-amount: uint                  ;; In micro-STX
+  }
+)
+
+;; NEW: Job SLA tracking
+(define-map job-sla-tracking
+  {job-id: uint}
+  {
+    sla-id: uint,
+    actual-uptime: uint,
+    actual-response-time: uint,
+    sla-met: bool,
+    penalty-applied: uint,
+    bonus-applied: uint
+  }
+)
+
+;; NEW: Get verification result
+(define-read-only (get-verification-result (job-id uint) (verifier principal))
+  (map-get? verification-results {job-id: job-id, verifier: verifier})
+)
+
+;; NEW: Get subscription tier details
+(define-read-only (get-subscription-tier (tier-id uint))
+  (map-get? subscription-tiers tier-id)
+)
+
+;; NEW: Get SLA details
+(define-read-only (get-service-level-agreement (sla-id uint))
+  (map-get? service-level-agreements sla-id)
+)
+
+;; NEW: Get job SLA tracking
+(define-read-only (get-job-sla-tracking (job-id uint))
+  (map-get? job-sla-tracking {job-id: job-id})
+)
