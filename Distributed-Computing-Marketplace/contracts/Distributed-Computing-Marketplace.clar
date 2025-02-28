@@ -190,3 +190,18 @@
 (define-read-only (get-dispute (dispute-id uint))
   (map-get? disputes dispute-id)
 )
+
+;; Get reputation rating for a job
+(define-read-only (get-reputation-for-job (user principal) (job-id uint))
+  (map-get? reputation-history {user: user, job-id: job-id})
+)
+
+;; Get governance proposal details
+(define-read-only (get-proposal (proposal-id uint))
+  (map-get? governance-proposals proposal-id)
+)
+
+;; Get vote on a proposal
+(define-read-only (get-vote (proposal-id uint) (voter principal))
+  (map-get? proposal-votes {proposal-id: proposal-id, voter: voter})
+)
