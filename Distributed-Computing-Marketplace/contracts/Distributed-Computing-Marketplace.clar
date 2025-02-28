@@ -44,3 +44,35 @@
     lightning-node-id: (optional (string-utf8 66))  ;; Lightning Network node ID
   }
 )
+
+;; Client registry - stores information about clients who need computing resources
+(define-map clients principal
+  {
+    registered: bool,
+    reputation-score: uint,            ;; out of 100
+    total-ratings: uint,
+    total-jobs-created: uint,
+    total-jobs-completed: uint,
+    total-spent: uint,
+    lightning-node-id: (optional (string-utf8 66))  ;; Lightning Network node ID
+  }
+)
+
+;; Job data structure - stores all jobs in the marketplace
+(define-map jobs uint
+  {
+    client: principal,
+    title: (string-utf8 100),
+    description: (string-utf8 500),
+    resource-requirements: (string-utf8 200),
+    payment-amount: uint,               ;; in micro-STX
+    status: (string-utf8 20),           ;; "open", "assigned", "completed", "disputed", "cancelled"
+    creation-time: uint,
+    deadline: uint,
+    provider: (optional principal),
+    result-hash: (optional (buff 32)),  ;; hash of computation result
+    verification-proof: (optional (buff 512)),  ;; proof of correct computation
+    escrow-amount: uint,                ;; amount held in escrow
+    dispute-resolution-votes: uint      ;; for governance resolution
+  }
+)
