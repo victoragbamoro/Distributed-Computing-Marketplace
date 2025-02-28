@@ -128,3 +128,34 @@
     ends-at: uint
   }
 )
+
+;; Votes on governance proposals
+(define-map proposal-votes 
+  {proposal-id: uint, voter: principal} 
+  {
+    vote: bool,                         ;; true = for, false = against
+    weight: uint,                       ;; based on reputation and stake
+    timestamp: uint
+  }
+)
+
+;; Lightning Network payment channels
+(define-map payment-channels 
+  {provider: principal, client: principal} 
+  {
+    channel-id: (buff 32),
+    provider-node-id: (string-utf8 66),
+    client-node-id: (string-utf8 66),
+    capacity: uint,
+    is-active: bool,
+    created-at: uint
+  }
+)
+
+;; Contract state variables
+(define-data-var job-counter uint u0)
+(define-data-var dispute-counter uint u0)
+(define-data-var proposal-counter uint u0)
+(define-data-var total-platform-fees uint u0)
+(define-data-var total-jobs-completed uint u0)
+(define-data-var total-computation-time uint u0)
