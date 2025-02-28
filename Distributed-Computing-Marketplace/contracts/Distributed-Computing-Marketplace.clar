@@ -330,3 +330,28 @@
     reduced-fees: uint                  ;; Fee reduction percentage
   }
 )
+
+;; NEW: SLA (Service Level Agreement) definitions
+(define-map service-level-agreements uint
+  {
+    name: (string-utf8 50),
+    description: (string-utf8 200),
+    uptime-requirement: uint,           ;; Percentage
+    response-time-max: uint,            ;; In blocks
+    penalty-amount: uint,               ;; In micro-STX
+    bonus-amount: uint                  ;; In micro-STX
+  }
+)
+
+;; NEW: Job SLA tracking
+(define-map job-sla-tracking
+  {job-id: uint}
+  {
+    sla-id: uint,
+    actual-uptime: uint,
+    actual-response-time: uint,
+    sla-met: bool,
+    penalty-applied: uint,
+    bonus-applied: uint
+  }
+)
