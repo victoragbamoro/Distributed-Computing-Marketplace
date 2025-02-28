@@ -205,3 +205,103 @@
 (define-read-only (get-vote (proposal-id uint) (voter principal))
   (map-get? proposal-votes {proposal-id: proposal-id, voter: voter})
 )
+
+;; Get payment channel details
+(define-read-only (get-payment-channel (provider principal) (client principal))
+  (map-get? payment-channels {provider: provider, client: client})
+)
+
+;; Check if a user is registered as a client
+(define-read-only (is-client-registered (client principal))
+  (get registered (get-client client))
+)
+
+;; Register as a client
+(define-public (register-client (lightning-node-id (optional (string-utf8 66))))
+  (let
+    ((client-exists (is-client-registered tx-sender)))
+    
+    (asserts! (not client-exists) ERR-ALREADY-REGISTERED)
+    
+    ;; Map the client data
+    (map-set clients tx-sender
+      {
+        registered: true,
+        reputation-score: u80,  ;; Start with neutral reputation (80/100)
+        total-ratings: u0,
+        total-jobs-created: u0,
+        total-jobs-completed: u0,
+        total-spent: u0,
+        lightning-node-id: lightning-node-id
+      }
+    )
+    
+    (ok true)
+  )
+)
+
+;; Update client details
+(define-public (update-client-details (lightning-node-id (optional (string-utf8 66))))
+  (let
+    ((client-data (get-client tx-sender)))
+    
+    (asserts! (get registered client-data) ERR-NOT-REGISTERED)
+    
+    (map-set clients tx-sender
+      (merge client-data 
+        {
+          lightning-node-id: lightning-node-id
+        }
+      )
+    )
+    
+    (ok true)
+  )
+)
+
+;; Rate a client after job completion
+(define-public (rate-client (job-id uint) (rating uint) (comment (string-utf8 200)))
+  (let
+    ((job-data (unwrap! (get-job job-id) ERR-INVALID-JOB))
+     (client (get client job-data))
+     (client-data (get-client client)))
+    
+    ;; Ensure sender is the job provider
+    (asserts! (is-eq (some tx-sender) (get provider job-data)) ERR-NOT-AUTHORIZED)
+    
+    
+    
+    ;; Ensure rating is valid (1-5)
+    (asserts! (and (>= rating u1) (<= rating u5)) ERR-INVALID-RATING)
+    
+    ;; Record the rating
+    (map-set reputation-history
+      {user: client, job-id: job-id}
+      {
+        rater: tx-sender,
+        rating: rating,
+        comment: comment,
+        timestamp: stacks-block-height
+      }
+    )
+    
+    ;; Update client reputation
+    (let
+      ((current-total (* (get reputation-score client-data) (get total-ratings client-data)))
+       (new-total-ratings (+ (get total-ratings client-data) u1))
+       (new-total-score (+ current-total (* rating u20)))  ;; Scale 1-5 to 0-100
+       (new-reputation (/ new-total-score new-total-ratings)))
+      
+      (map-set clients client
+        (merge client-data
+          {
+            reputation-score: new-reputation,
+            total-ratings: new-total-ratings
+          }
+        )
+      )
+      
+      (ok true)
+    )
+  )
+)
