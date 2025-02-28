@@ -305,3 +305,28 @@
     )
   )
 )
+
+;; NEW: Verification results
+(define-map verification-results
+  {job-id: uint, verifier: principal}
+  {
+    result: bool,                      ;; true = verified correct, false = incorrect
+    verification-time: uint,
+    reward-amount: uint,
+    verification-proof: (buff 64),
+    comments: (string-utf8 200)
+  }
+)
+
+;; NEW: Provider subscription tiers
+(define-map subscription-tiers uint
+  {
+    name: (string-utf8 50),
+    description: (string-utf8 200),
+    cost-per-month: uint,
+    benefits: (string-utf8 500),
+    max-concurrent-jobs: uint,
+    priority-bidding: bool,
+    reduced-fees: uint                  ;; Fee reduction percentage
+  }
+)
