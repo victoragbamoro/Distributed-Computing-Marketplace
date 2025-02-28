@@ -1,0 +1,19 @@
+[project]
+name = 'Distributed-Computing-Marketplace'
+description = ''
+authors = []
+telemetry = true
+cache_dir = './.cache'
+requirements = []
+[contracts.Distributed-Computing-Marketplace]
+path = 'contracts/Distributed-Computing-Marketplace.clar'
+clarity_version = 3
+epoch = 3.0
+[repl.analysis]
+passes = ['check_checker']
+
+[repl.analysis.check_checker]
+strict = false
+trusted_sender = false
+trusted_caller = false
+callee_filter = false
