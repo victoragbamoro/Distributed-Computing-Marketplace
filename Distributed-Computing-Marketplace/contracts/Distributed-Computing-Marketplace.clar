@@ -19,3 +19,28 @@
 (define-constant ERR-UNAUTHORIZED-RESOLVER (err u113))
 (define-constant ERR-INVALID-PROPOSAL (err u114))
 (define-constant ERR-PROPOSAL-ALREADY-VOTED (err u115))
+
+;; Governance parameters
+(define-constant GOVERNANCE-THRESHOLD u70) ;; 70% support required for proposals to pass
+(define-constant DISPUTE-RESOLUTION-FEE u1000000) ;; in uSTX
+(define-constant PLATFORM-FEE-PERCENTAGE u2) ;; 2% fee
+(define-constant MIN-STAKE-AMOUNT u50000000) ;; 50 STX minimum stake for providers
+
+;; ========== Data Maps and Variables ==========
+
+;; Provider registry - stores information about computing resource providers
+(define-map providers principal 
+  {
+    registered: bool,
+    available: bool,
+    resource-type: (string-utf8 50),    ;; e.g., "GPU", "CPU", "Storage"
+    specs: (string-utf8 200),           ;; detailed specifications
+    price-per-hour: uint,               ;; in micro-STX
+    reputation-score: uint,             ;; out of 100
+    total-ratings: uint,
+    total-completed-jobs: uint,
+    total-earnings: uint,
+    staked-amount: uint,                ;; stake for commitment
+    lightning-node-id: (optional (string-utf8 66))  ;; Lightning Network node ID
+  }
+)
