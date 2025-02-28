@@ -175,3 +175,18 @@
     (map-get? clients client-id)
   )
 )
+
+;; Get job details
+(define-read-only (get-job (job-id uint))
+  (map-get? jobs job-id)
+)
+
+;; Helper function for get-job-bids
+(define-private (check-and-add-bid (result (list 10 {job-id: uint, bidder: principal, amount: uint, estimated-time: uint, proposal: (string-utf8 200), timestamp: uint})) (current-job-id uint))
+  result
+)
+
+;; Get dispute details
+(define-read-only (get-dispute (dispute-id uint))
+  (map-get? disputes dispute-id)
+)
