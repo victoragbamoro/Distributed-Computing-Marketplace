@@ -355,3 +355,23 @@
     bonus-applied: uint
   }
 )
+
+;; NEW: Get verification result
+(define-read-only (get-verification-result (job-id uint) (verifier principal))
+  (map-get? verification-results {job-id: job-id, verifier: verifier})
+)
+
+;; NEW: Get subscription tier details
+(define-read-only (get-subscription-tier (tier-id uint))
+  (map-get? subscription-tiers tier-id)
+)
+
+;; NEW: Get SLA details
+(define-read-only (get-service-level-agreement (sla-id uint))
+  (map-get? service-level-agreements sla-id)
+)
+
+;; NEW: Get job SLA tracking
+(define-read-only (get-job-sla-tracking (job-id uint))
+  (map-get? job-sla-tracking {job-id: job-id})
+)
