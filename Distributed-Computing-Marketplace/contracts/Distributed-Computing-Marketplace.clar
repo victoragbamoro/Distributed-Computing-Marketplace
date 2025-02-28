@@ -76,3 +76,27 @@
     dispute-resolution-votes: uint      ;; for governance resolution
   }
 )
+
+;; Bids placed on jobs
+(define-map bids 
+  {job-id: uint, bidder: principal} 
+  {
+    amount: uint,
+    estimated-time: uint,
+    proposal: (string-utf8 200),
+    timestamp: uint
+  }
+)
+
+;; Disputes tracking
+(define-map disputes uint
+  {
+    job-id: uint,
+    initiator: principal,
+    reason: (string-utf8 500),
+    evidence: (buff 64),
+    status: (string-utf8 20),           ;; "open", "resolved", "client-favor", "provider-favor"
+    created-at: uint,
+    resolved-at: (optional uint)
+  }
+)
