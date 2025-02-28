@@ -159,3 +159,19 @@
 (define-data-var total-platform-fees uint u0)
 (define-data-var total-jobs-completed uint u0)
 (define-data-var total-computation-time uint u0)
+
+;; Get client details
+(define-read-only (get-client (client-id principal))
+  (default-to 
+    {
+      registered: false,
+      reputation-score: u0,
+      total-ratings: u0,
+      total-jobs-created: u0,
+      total-jobs-completed: u0,
+      total-spent: u0,
+      lightning-node-id: none
+    }
+    (map-get? clients client-id)
+  )
+)
