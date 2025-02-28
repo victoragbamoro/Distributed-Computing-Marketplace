@@ -100,3 +100,31 @@
     resolved-at: (optional uint)
   }
 )
+
+;; Reputation history
+(define-map reputation-history 
+  {user: principal, job-id: uint} 
+  {
+    rater: principal,
+    rating: uint,                       ;; 1-5 stars
+    comment: (string-utf8 200),
+    timestamp: uint
+  }
+)
+
+;; Governance proposals
+(define-map governance-proposals uint
+  {
+    proposer: principal,
+    title: (string-utf8 100),
+    description: (string-utf8 500),
+    proposal-type: (string-utf8 30),    ;; "parameter-change", "feature-addition", "protocol-upgrade"
+    parameter-key: (optional (string-utf8 50)),
+    parameter-value: (optional uint),
+    votes-for: uint,
+    votes-against: uint,
+    status: (string-utf8 20),           ;; "active", "passed", "rejected", "implemented"
+    created-at: uint,
+    ends-at: uint
+  }
+)
